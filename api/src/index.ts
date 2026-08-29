@@ -8,6 +8,7 @@ import { config } from "@/config/index.js";
 import { requestId } from "@/middleware/index.js";
 import { healthRouter } from "@/routes/index.js";
 import { HttpError } from "@/errors/index.js";
+import { errorMeta } from "@/utils/index.js";
 
 export function createApp(): express.Express {
   const app = express();
@@ -27,7 +28,7 @@ export function createApp(): express.Express {
     app.use((req, res, next) => {
       middleware(req, res, (err) => {
         if (err) {
-          const message = err instanceof Error ? err.message : String(err);
+          const message = errorMeta(err).message;
           const status =
             typeof err === "object" &&
             err !== null &&

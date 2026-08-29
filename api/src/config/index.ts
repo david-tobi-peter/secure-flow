@@ -1,8 +1,11 @@
 import "dotenv/config";
 
+const port = Number(process.env.PORT ?? 3000);
+
 export const config = {
   nodeEnv: process.env.NODE_ENV ?? "development",
-  port: Number(process.env.PORT ?? 3000),
+  port,
   logLevel: process.env.LOG_LEVEL ?? "info",
   isProduction: process.env.NODE_ENV === "production",
-};
+  databaseUrl: process.env.DATABASE_URL ?? "",
+} as const;

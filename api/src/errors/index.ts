@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import { Logger } from "@/utils/index.js";
+import { errorMeta, Logger } from "@/utils/index.js";
 
 export abstract class HttpError extends Error {
   abstract readonly statusCode: number;
@@ -108,11 +108,7 @@ export abstract class HttpError extends Error {
     }
     
     const requestId = (req.res?.locals.requestId as string | undefined) ?? null;
-    Logger.error("Unhandled error", {
-      requestId,
-      message: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
-    });
+    Logger.error("Unhandled error", { requestId, ...errorMeta(err) });
     new HttpError.Internal("Internal server error").respond(req);
   }
 }

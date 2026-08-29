@@ -10,7 +10,7 @@ const devFormat = printf((info) => {
   return `${timestamp} [${level}] ${message}${metaStr}${stackStr}`;
 });
 
-export const Logger = winston.createLogger({
+const instance = winston.createLogger({
   level: config.logLevel,
   format: combine(
     timestamp(),
@@ -19,3 +19,38 @@ export const Logger = winston.createLogger({
   ),
   transports: config.isProduction ? [] : [new winston.transports.Console()],
 });
+
+/**
+ * Normalize an unknown value into error meta.
+ *
+ * @param err
+ * @returns The error's message and stack for logging.
+ */
+export function errorMeta(err: unknown): { message: string; stack?: string } {
+  return err instanceof Error
+    ? { message: err.message, stack: err.stack }
+    : { message: String(err) };
+}
+
+function toMeta(meta: unknown): object | undefined {
+  if (meta === undefined) {
+    return undefined;
+  }
+  return meta instanceof Error ? errorMeta(meta) : (meta as object);
+}
+
+/** Application logger; errors passed as meta are normalized automatically. */
+export const Logger = {
+  error(message: string, meta?: unknown): void {
+    instance.error(message, toMeta(meta));
+  },
+  warn(message: string, meta?: unknown): void {
+    instance.warn(message, toMeta(meta));
+  },
+  info(message: string, meta?: unknown): void {
+    instance.info(message, toMeta(meta));
+  },
+  debug(message: string, meta?: unknown): void {
+    instance.debug(message, toMeta(meta));
+  },
+};
