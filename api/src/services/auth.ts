@@ -1,9 +1,10 @@
-import { Inject, Service } from "typedi";
+import { Service } from "typedi";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { AppDataSource, User } from "@/database/index.js";
 import { config } from "@/config/index.js";
 import { HttpError } from "@/errors/index.js";
+import { Container } from "typedi";
 import { SessionService } from "./session.js";
 import type { AuthResult, LoginRequest, RegisterRequest } from "@/types/index.js";
 
@@ -16,8 +17,11 @@ const DUMMY_HASH = bcrypt.hashSync("dummy-password", BCRYPT_ROUNDS);
 @Service()
 export class AuthService {
   private readonly users = AppDataSource.getRepository(User);
+  private readonly sessions: SessionService;
 
-  constructor(@Inject(() => SessionService) private readonly sessions: SessionService) {}
+  constructor() {
+    this.sessions = Container.get(SessionService);
+  }
 
   /** Register a new user and return a token. */
   async register(payload: RegisterRequest): Promise<AuthResult> {
@@ -27,6 +31,7 @@ export class AuthService {
     }
 
     const password = await bcrypt.hash(payload.password, BCRYPT_ROUNDS);
+
     const user = this.users.create({ email: payload.email, password, name: payload.name });
     await this.users.save(user);
 

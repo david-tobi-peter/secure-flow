@@ -24,6 +24,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Authenticated but not permitted
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     NotFound:
       description: Resource not found
       content:
@@ -77,14 +83,14 @@ components:
       type: object
       required:
         - page
-        - perPage
+        - limit
         - total
         - totalPages
       properties:
         page:
           type: integer
           minimum: 1
-        perPage:
+        limit:
           type: integer
           minimum: 1
         total:

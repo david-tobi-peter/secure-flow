@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { Inject, Service } from "typedi";
+import { Container, Service } from "typedi";
 import { ApiResponse } from "@/helpers/index.js";
 import { Controller } from "@/decorators/index.js";
 import { HttpError } from "@/errors/index.js";
@@ -10,10 +10,13 @@ import type { LoginRequest, RegisterRequest } from "@/types/index.js";
 @Service()
 @Controller
 export class AuthController {
-  constructor(
-    @Inject(() => AuthService) private readonly authService: AuthService,
-    @Inject(() => SessionService) private readonly sessions: SessionService,
-  ) {}
+  private readonly authService: AuthService;
+  private readonly sessions: SessionService;
+
+  constructor() {
+    this.authService = Container.get(AuthService);
+    this.sessions = Container.get(SessionService);
+  }
 
   /**
    * Register a new user.
@@ -23,7 +26,9 @@ export class AuthController {
    */
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.authService.register(req.body as RegisterRequest);
+      const payload = req.body as RegisterRequest;
+      const result = await this.authService.register(payload);
+
       ApiResponse.send(res, 201, "User registered", result);
     } catch (err) {
       HttpError.handle(req, err);
@@ -38,7 +43,9 @@ export class AuthController {
    */
   async login(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.authService.login(req.body as LoginRequest);
+      const payload = req.body as LoginRequest;
+      const result = await this.authService.login(payload);
+
       ApiResponse.send(res, 200, "Logged in", result);
     } catch (err) {
       HttpError.handle(req, err);
@@ -53,7 +60,9 @@ export class AuthController {
    */
   async logout(req: Request, res: Response): Promise<void> {
     try {
-      await this.sessions.revoke(res.locals.jti as string);
+      const jti = res.locals.jti as string;
+      await this.sessions.revoke(jti);
+
       ApiResponse.send(res, 200, "Logged out");
     } catch (err) {
       HttpError.handle(req, err);

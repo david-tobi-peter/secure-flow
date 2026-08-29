@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { Inject, Service } from "typedi";
+import { Container, Service } from "typedi";
 import { ApiResponse } from "@/helpers/index.js";
 import { Controller } from "@/decorators/index.js";
 import { HttpError } from "@/errors/index.js";
@@ -9,7 +9,11 @@ import { HealthService } from "@/services/index.js";
 @Service()
 @Controller
 export class HealthController {
-  constructor(@Inject(() => HealthService) private readonly healthService: HealthService) {}
+  private readonly healthService: HealthService;
+
+  constructor() {
+    this.healthService = Container.get(HealthService);
+  }
 
   /**
    * Respond with the current health status.

@@ -1,0 +1,126 @@
+paths:
+  /organizations:
+    post:
+      summary: Create an organization
+      operationId: createOrganization
+      tags:
+        - organizations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganizationRequest"
+      responses:
+        "201":
+          description: Organization created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      summary: List the caller's organizations
+      operationId: listOrganizations
+      tags:
+        - organizations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Organizations list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationListEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /organizations/{orgId}:
+    get:
+      summary: Get an organization
+      operationId: getOrganization
+      tags:
+        - organizations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+schemas:
+  Organization:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+  CreateOrganizationRequest:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        minLength: 1
+  OrganizationEnvelope:
+    allOf:
+      - $ref: "#/components/schemas/APIResponse"
+      - type: object
+        required:
+          - data
+        properties:
+          data:
+            $ref: "#/components/schemas/Organization"
+  OrganizationListEnvelope:
+    allOf:
+      - $ref: "#/components/schemas/APIResponse"
+      - $ref: "#/components/schemas/Pagination"
+      - type: object
+        required:
+          - data
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/Organization"

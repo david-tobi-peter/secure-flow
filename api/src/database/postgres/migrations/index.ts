@@ -1,4 +1,10 @@
 export * from "./1788044400000-CreateUsers.js";
+export * from "./1788050000000-CreateOrganizationsAndMemberships.js";
 import { CreateUsers1788044400000 } from "./1788044400000-CreateUsers.js";
+import { CreateOrganizationsAndMemberships1788050000000 } from "./1788050000000-CreateOrganizationsAndMemberships.js";
 
-export const migrations = [CreateUsers1788044400000];
+/** All migrations; registered on the data source. */
+export const migrations = [
+  CreateUsers1788044400000,
+  CreateOrganizationsAndMemberships1788050000000,
+];

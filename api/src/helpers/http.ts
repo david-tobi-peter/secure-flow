@@ -29,7 +29,7 @@ export class ApiResponse {
    * @param summary
    * @param data
    * @param page
-   * @param perPage
+   * @param limit
    * @param total
    */
   static sendPaginated<T>(
@@ -38,13 +38,13 @@ export class ApiResponse {
     summary: string,
     data: T[],
     page: number,
-    perPage: number,
+    limit: number,
     total: number,
   ): void {
-    const totalPages = Math.ceil(total / perPage);
+    const totalPages = Math.ceil(total / limit);
     const pagination: Pagination = {
       page,
-      perPage,
+      limit,
       total,
       totalPages,
       next: page < totalPages ? page + 1 : null,
