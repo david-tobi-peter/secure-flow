@@ -8,7 +8,7 @@ import { config } from "@/config/index.js";
 import { requestId } from "@/middleware/index.js";
 import { authRouter, healthRouter } from "@/routes/index.js";
 import { HttpError } from "@/errors/index.js";
-import { errorMeta } from "@/utils/index.js";
+import { errorMeta } from "@/loggers/index.js";
 
 export function createApp(): express.Express {
   const app = express();

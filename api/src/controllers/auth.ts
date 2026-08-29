@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { Inject, Service } from "typedi";
-import { ApiResponse } from "@/utils/index.js";
+import { ApiResponse } from "@/helpers/index.js";
 import { Controller } from "@/decorators/index.js";
 import { HttpError } from "@/errors/index.js";
 import { AuthService, SessionService } from "@/services/index.js";

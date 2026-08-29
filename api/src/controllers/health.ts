@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { Inject, Service } from "typedi";
-import { ApiResponse } from "@/utils/index.js";
+import { ApiResponse } from "@/helpers/index.js";
 import { Controller } from "@/decorators/index.js";
 import { HttpError } from "@/errors/index.js";
 import { HealthService } from "@/services/index.js";
@@ -17,10 +17,12 @@ export class HealthController {
    * @param req
    * @param res
    */
-  getHealth(req: Request, res: Response): void {
+  async getHealth(req: Request, res: Response): Promise<void> {
     try {
-      const health = this.healthService.getHealth();
-      ApiResponse.send(res, 200, "Health check", health);
+      const health = await this.healthService.check();
+      const status = health.status === "ok" ? 200 : 503;
+
+      ApiResponse.send(res, status, "Health check", health);
     } catch (err) {
       HttpError.handle(req, err);
     }

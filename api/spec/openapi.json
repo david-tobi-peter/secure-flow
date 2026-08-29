@@ -220,10 +220,29 @@
           }
         }
       },
+      "HealthEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/APIResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/HealthResponse"
+              }
+            }
+          }
+        ]
+      },
       "HealthResponse": {
         "type": "object",
         "required": [
           "status",
+          "checks",
           "uptime",
           "timestamp"
         ],
@@ -231,8 +250,32 @@
           "status": {
             "type": "string",
             "enum": [
-              "ok"
+              "ok",
+              "degraded"
             ]
+          },
+          "checks": {
+            "type": "object",
+            "required": [
+              "postgres",
+              "redis"
+            ],
+            "properties": {
+              "postgres": {
+                "type": "string",
+                "enum": [
+                  "ok",
+                  "down"
+                ]
+              },
+              "redis": {
+                "type": "string",
+                "enum": [
+                  "ok",
+                  "down"
+                ]
+              }
+            }
           },
           "uptime": {
             "type": "number"
@@ -388,26 +431,21 @@
         ],
         "responses": {
           "200": {
-            "description": "API is healthy",
+            "description": "All dependencies healthy",
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/APIResponse"
-                    },
-                    {
-                      "type": "object",
-                      "required": [
-                        "data"
-                      ],
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/HealthResponse"
-                        }
-                      }
-                    }
-                  ]
+                  "$ref": "#/components/schemas/HealthEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "One or more dependencies are down",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthEnvelope"
                 }
               }
             }

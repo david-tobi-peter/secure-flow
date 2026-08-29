@@ -123,9 +123,18 @@ export interface components {
             token: string;
             user: components["schemas"]["User"];
         };
+        HealthEnvelope: components["schemas"]["APIResponse"] & {
+            data: components["schemas"]["HealthResponse"];
+        };
         HealthResponse: {
             /** @enum {string} */
-            status: "ok";
+            status: "ok" | "degraded";
+            checks: {
+                /** @enum {string} */
+                postgres: "ok" | "down";
+                /** @enum {string} */
+                redis: "ok" | "down";
+            };
             uptime: number;
             /** Format: date-time */
             timestamp: string;
@@ -262,15 +271,22 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description API is healthy */
+            /** @description All dependencies healthy */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"] & {
-                        data: components["schemas"]["HealthResponse"];
-                    };
+                    "application/json": components["schemas"]["HealthEnvelope"];
+                };
+            };
+            /** @description One or more dependencies are down */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthEnvelope"];
                 };
             };
         };

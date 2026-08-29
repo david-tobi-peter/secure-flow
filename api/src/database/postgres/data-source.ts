@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 import { config } from "@/config/index.js";
 import { entities } from "./entities/index.js";
 import { migrations } from "./migrations/index.js";
-import { TypeOrmLogger } from "@/utils/index.js";
+import { TypeOrmLogger } from "@/loggers/index.js";
 
 export const AppDataSource = new DataSource({
   type: "postgres",

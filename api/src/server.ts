@@ -1,5 +1,5 @@
 import { config } from "@/config/index.js";
-import { Logger } from "@/utils/index.js";
+import { Logger } from "@/loggers/index.js";
 import { createApp } from "@/index.js";
 import { AppDataSource, redis } from "@/database/index.js";
 

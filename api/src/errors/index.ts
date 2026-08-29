@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import { errorMeta, Logger } from "@/utils/index.js";
+import { errorMeta, Logger } from "@/loggers/index.js";
 
 export abstract class HttpError extends Error {
   abstract readonly statusCode: number;

@@ -1,4 +1,5 @@
 import winston from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
 import { config } from "@/config/index.js";
 
 const { combine, timestamp, errors, json, printf } = winston.format;
@@ -10,14 +11,30 @@ const devFormat = printf((info) => {
   return `${timestamp} [${level}] ${message}${metaStr}${stackStr}`;
 });
 
+const base = combine(timestamp(), errors({ stack: true }));
+
+const fileTransport = new DailyRotateFile({
+  dirname: "logs",
+  filename: "api-%DATE%.log",
+  datePattern: "YYYY-MM-DD",
+  maxSize: "10m",
+  maxFiles: "14d",
+  zippedArchive: true,
+  format: combine(base, json()),
+});
+
+const transports: winston.transport[] = [fileTransport];
+if (!config.isProduction) {
+  transports.push(
+    new winston.transports.Console({
+      format: combine(base, devFormat),
+    }),
+  );
+}
+
 const instance = winston.createLogger({
   level: config.logLevel,
-  format: combine(
-    timestamp(),
-    errors({ stack: true }),
-    config.isProduction ? json() : devFormat,
-  ),
-  transports: config.isProduction ? [] : [new winston.transports.Console()],
+  transports,
 });
 
 /**
