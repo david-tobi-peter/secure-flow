@@ -8,4 +8,6 @@ export const config = {
   logLevel: process.env.LOG_LEVEL ?? "info",
   isProduction: process.env.NODE_ENV === "production",
   databaseUrl: process.env.DATABASE_URL ?? "",
+  redisUrl: process.env.REDIS_URL ?? "redis://localhost:6379",
+  jwtSecret: process.env.JWT_SECRET ?? "",
 } as const;

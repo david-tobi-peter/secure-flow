@@ -6,7 +6,7 @@ import swaggerUi from "swagger-ui-express";
 import OpenApiValidator from "express-openapi-validator";
 import { config } from "@/config/index.js";
 import { requestId } from "@/middleware/index.js";
-import { healthRouter } from "@/routes/index.js";
+import { authRouter, healthRouter } from "@/routes/index.js";
 import { HttpError } from "@/errors/index.js";
 import { errorMeta } from "@/utils/index.js";
 
@@ -45,6 +45,7 @@ export function createApp(): express.Express {
   }
 
   app.use("/health", healthRouter);
+  app.use("/auth", authRouter);
 
   if (!config.isProduction) {
     const spec = JSON.parse(

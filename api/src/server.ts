@@ -1,7 +1,7 @@
 import { config } from "@/config/index.js";
 import { Logger } from "@/utils/index.js";
 import { createApp } from "@/index.js";
-import { AppDataSource } from "@/database/index.js";
+import { AppDataSource, redis } from "@/database/index.js";
 
 async function bootstrap(): Promise<void> {
   await AppDataSource.initialize();
@@ -23,6 +23,7 @@ async function bootstrap(): Promise<void> {
         process.exit(1);
       }
       await AppDataSource.destroy();
+      redis.disconnect();
       Logger.info("Server closed cleanly");
       process.exit(0);
     });
