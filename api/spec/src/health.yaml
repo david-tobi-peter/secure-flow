@@ -1,0 +1,38 @@
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      tags:
+        - system
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/APIResponse"
+                  - type: object
+                    required:
+                      - data
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/HealthResponse"
+schemas:
+  HealthResponse:
+    type: object
+    required:
+      - status
+      - uptime
+      - timestamp
+    properties:
+      status:
+        type: string
+        enum:
+          - ok
+      uptime:
+        type: number
+      timestamp:
+        type: string
+        format: date-time

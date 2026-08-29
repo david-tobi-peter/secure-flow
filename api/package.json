@@ -1,0 +1,42 @@
+{
+  "name": "secureflow-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SecureFlow API — deliberately boring multi-tenant project management backend",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run bundle:spec && tsx watch src/server.ts",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "bundle:spec": "tsx scripts/bundle-spec.ts",
+    "generate:types": "npm run bundle:spec && openapi-typescript spec/openapi.json -o src/types/openapi.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-openapi-validator": "^5.6.2",
+    "reflect-metadata": "^0.2.2",
+    "swagger-ui-express": "^5.0.1",
+    "typedi": "^0.10.0",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.4.0",
+    "@types/swagger-ui-express": "^4.1.8",
+    "eslint": "^10.9.1",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "^3.9.6",
+    "tsc-alias": "^1.9.2",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.68.0",
+    "yaml": "^2.9.0"
+  }
+}
