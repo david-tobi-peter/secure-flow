@@ -57,6 +57,24 @@ export class TaskService {
     return { data: tasks.map((t) => this.toTaskResponse(t)), total };
   }
 
+  /**
+   * Verify the actor is a member and the task exists in the project and org.
+   */
+  async requireAccess(
+    actorId: string,
+    orgId: string,
+    projectId: string,
+    taskId: string,
+  ): Promise<void> {
+    await this.members.requireMember(actorId, orgId);
+    const exists = await this.tasks.exists({
+      where: { id: taskId, project: { id: projectId, organization: { id: orgId } } },
+    });
+    if (!exists) {
+      throw new HttpError.NotFound("Task not found");
+    }
+  }
+
   /** Get a task; non-members and foreign tasks see 404. */
   async get(actorId: string, orgId: string, projectId: string, taskId: string): Promise<TaskResponse> {
     await this.members.requireMember(actorId, orgId);

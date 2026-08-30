@@ -35,3 +35,4 @@ export type CreateProjectRequest = components["schemas"]["CreateProjectRequest"]
 export type CreateTaskRequest = components["schemas"]["CreateTaskRequest"];
 /** Request body for PATCH /tasks/{taskId}. */
 export type UpdateTaskRequest = components["schemas"]["UpdateTaskRequest"];
+
