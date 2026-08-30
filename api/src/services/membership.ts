@@ -14,13 +14,17 @@ export class MembershipService {
   private readonly memberships = AppDataSource.getRepository(Membership);
   private readonly users = AppDataSource.getRepository(User);
 
-  /** The actor's membership (with org loaded), or 404 (org hidden from non-members). */
-  async requireMember(userId: string, orgId: string): Promise<Membership> {
-    const membership = await this.memberships.findOne({
+  /** The actor's membership (with org loaded), or null when not a member. */
+  async getMembership(userId: string, orgId: string): Promise<Membership | null> {
+    return this.memberships.findOne({
       where: { user: { id: userId }, organization: { id: orgId } },
       relations: { organization: true },
     });
+  }
 
+  /** The actor's membership, or 404 (org hidden from non-members). */
+  async requireMember(userId: string, orgId: string): Promise<Membership> {
+    const membership = await this.getMembership(userId, orgId);
     if (!membership) {
       throw new HttpError.NotFound("Organization not found");
     }

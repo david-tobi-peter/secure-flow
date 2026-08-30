@@ -1,0 +1,276 @@
+paths:
+  /organizations/{orgId}/projects/{projectId}/tasks:
+    get:
+      summary: List tasks in a project
+      operationId: listTasks
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Tasks list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskListEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Create a task
+      operationId: createTask
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskRequest"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /organizations/{orgId}/projects/{projectId}/tasks/{taskId}:
+    get:
+      summary: Get a task
+      operationId: getTask
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update a task
+      operationId: updateTask
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete a task
+      operationId: deleteTask
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+schemas:
+  Task:
+    type: object
+    required:
+      - id
+      - title
+      - status
+    properties:
+      id:
+        type: string
+        format: uuid
+      title:
+        type: string
+      status:
+        type: string
+        enum:
+          - todo
+          - in_progress
+          - done
+      createdAt:
+        type: string
+        format: date-time
+  CreateTaskRequest:
+    type: object
+    required:
+      - title
+    additionalProperties: false
+    properties:
+      title:
+        type: string
+        minLength: 1
+      status:
+        type: string
+        enum:
+          - todo
+          - in_progress
+          - done
+  UpdateTaskRequest:
+    type: object
+    additionalProperties: false
+    properties:
+      title:
+        type: string
+        minLength: 1
+      status:
+        type: string
+        enum:
+          - todo
+          - in_progress
+          - done
+  TaskEnvelope:
+    allOf:
+      - $ref: "#/components/schemas/APIResponse"
+      - type: object
+        required:
+          - data
+        properties:
+          data:
+            $ref: "#/components/schemas/Task"
+  TaskListEnvelope:
+    allOf:
+      - $ref: "#/components/schemas/APIResponse"
+      - $ref: "#/components/schemas/Pagination"
+      - type: object
+        required:
+          - data
+        properties:
+          data:
+            type: array
+            items:
+              $ref: "#/components/schemas/Task"

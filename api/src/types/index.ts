@@ -25,3 +25,13 @@ export type CreateOrganizationRequest = components["schemas"]["CreateOrganizatio
 export type InviteMemberRequest = components["schemas"]["InviteMemberRequest"];
 /** Request body for PATCH /organizations/{orgId}/members/{userId}. */
 export type ChangeMemberRoleRequest = components["schemas"]["ChangeMemberRoleRequest"];
+/** Project view. */
+export type Project = components["schemas"]["Project"];
+/** Task view. */
+export type Task = components["schemas"]["Task"];
+/** Request body for POST /organizations/{orgId}/projects. */
+export type CreateProjectRequest = components["schemas"]["CreateProjectRequest"];
+/** Request body for POST /projects/{projectId}/tasks. */
+export type CreateTaskRequest = components["schemas"]["CreateTaskRequest"];
+/** Request body for PATCH /tasks/{taskId}. */
+export type UpdateTaskRequest = components["schemas"]["UpdateTaskRequest"];
