@@ -85,6 +85,7 @@ schemas:
       - email
       - password
       - name
+    additionalProperties: false
     properties:
       email:
         type: string
@@ -101,6 +102,7 @@ schemas:
     required:
       - email
       - password
+    additionalProperties: false
     properties:
       email:
         type: string
