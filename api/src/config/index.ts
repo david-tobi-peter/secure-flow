@@ -1,6 +1,7 @@
 import "dotenv/config";
 
 const port = Number(process.env.PORT ?? 3000);
+const host = process.env.HOST ?? "127.0.0.1";
 
 const nodeEnv = process.env.NODE_ENV ?? "development";
 const isProduction = nodeEnv === "production";
@@ -16,6 +17,7 @@ if (isProduction) {
 
 export const config = {
   nodeEnv,
+  host,
   port,
   logLevel: process.env.LOG_LEVEL ?? "info",
   isProduction,

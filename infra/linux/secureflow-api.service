@@ -1,0 +1,45 @@
+# SecureFlow API — systemd unit
+
+[Unit]
+Description=SecureFlow API
+After=network-online.target postgresql.service redis-server.service
+Wants=network-online.target postgresql.service redis-server.service
+
+[Service]
+Type=simple
+
+# --- identity -------------------------------------------------------------
+User=secureflow
+Group=secureflow
+UMask=0027
+
+# --- where and how it runs ------------------------------------------------
+WorkingDirectory=/opt/secureflow
+EnvironmentFile=/opt/secureflow/.env
+ExecStart=/usr/bin/node /opt/secureflow/dist/server.js
+
+# --- non-secret configuration -----------
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOST=127.0.0.1
+Environment=LOG_LEVEL=info
+
+# --- supervision ----------------------------------------------------------
+Restart=on-failure
+RestartSec=2
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# --- resource limits ------------------------
+MemoryMax=1G
+CPUQuota=100%
+LimitNOFILE=4096
+LimitCORE=0
+
+# --- logs → journald -----------------
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=secureflow-api
+
+[Install]
+WantedBy=multi-user.target

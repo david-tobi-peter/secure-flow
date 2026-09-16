@@ -9,9 +9,9 @@ async function bootstrap(): Promise<void> {
 
   const app = createApp();
 
-  const server = app.listen(config.port, () => {
+  const server = app.listen(config.port, config.host, () => {
     Logger.info(
-      `SecureFlow API listening on http://localhost:${config.port} (env: ${config.nodeEnv})`,
+      `SecureFlow API listening on http://${config.host}:${config.port} (env: ${config.nodeEnv})`,
     );
   });
 
@@ -23,12 +23,15 @@ async function bootstrap(): Promise<void> {
         process.exit(1);
       }
       await AppDataSource.destroy();
-      redis.disconnect();
+      await redis.quit().catch(() => redis.disconnect());
       Logger.info("Server closed cleanly");
       process.exit(0);
     });
 
+    server.closeIdleConnections();
+
     setTimeout(() => {
+      server.closeAllConnections();
       Logger.error("Forced shutdown after timeout");
       process.exit(1);
     }, 10_000).unref();
