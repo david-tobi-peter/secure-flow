@@ -58,6 +58,7 @@ override.tf.json
 # --- Local planning material & tooling (private context, not source) ---
 notes/
 tools/
+system-tools/
 docs/architecture/
 
 api/scripts/smoke.ts
