@@ -5,18 +5,12 @@
 SecureFlow is a deliberately simple multi-tenant project-management backend that serves as
 the workload for a progressively built production-like security architecture.
 
-> The backend is the workload. The infrastructure is the laboratory.
-> The security architecture is the subject. The phased evolution is the curriculum.
-
 ## What SecureFlow is
 
 - **Multi-tenant project management API** — Organizations → Projects → Tasks / Comments / Attachments → API Keys
 - **Human identities:** Owner, Admin, Member
 - **Machine identities:** CI/CD (later: API, Worker)
 - **Stack:** TypeScript · Node.js · PostgreSQL · Redis · Docker
-
-The application intentionally stays boring. All the complexity — infrastructure, security
-architecture, observability, detection, incident response — evolves *around* it.
 
 ## The system's evolution
 
@@ -28,9 +22,6 @@ Detection engineering → Incident response → Adversarial testing → Hardened
 ```
 
 ## Curriculum map
-
-Each phase is a unit of work, not a deadline. A phase advances when its problem is solved
-and its decisions are documented.
 
 | Phase | Focus | SecureFlow's problem | Response | Journal |
 |-------|-------|----------------------|----------|---------|
