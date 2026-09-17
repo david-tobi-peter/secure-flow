@@ -16,7 +16,7 @@ UMask=0027
 # --- where and how it runs ------------------------------------------------
 WorkingDirectory=/opt/secureflow
 EnvironmentFile=/opt/secureflow/.env
-ExecStart=/usr/bin/node /opt/secureflow/dist/server.js
+ExecStart=/usr/bin/node /opt/secureflow/dist/index.js
 
 # --- non-secret configuration -----------
 Environment=NODE_ENV=production
@@ -31,9 +31,10 @@ KillSignal=SIGTERM
 TimeoutStopSec=20
 
 # --- resource limits ------------------------
+TasksMax=256
 MemoryMax=1G
-CPUQuota=100%
-LimitNOFILE=4096
+CPUQuota=85%
+LimitNOFILE=1024
 LimitCORE=0
 
 # --- logs → journald -----------------

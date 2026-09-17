@@ -1,65 +1,58 @@
 import "reflect-metadata";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import express from "express";
-import swaggerUi from "swagger-ui-express";
-import OpenApiValidator from "express-openapi-validator";
 import { config } from "@/config/index.js";
-import { requestId } from "@/middleware/index.js";
-import { authRouter, healthRouter, organizationRouter, projectsRouter, tasksRouter } from "@/routes/index.js";
-import { HttpError } from "@/errors/index.js";
-import { errorMeta } from "@/loggers/index.js";
+import { Logger } from "@/loggers/index.js";
+import { createApp } from "@/server.js";
+import { AppDataSource, redis } from "@/database/index.js";
 
-export function createApp(): express.Express {
-  const app = express();
+async function bootstrap(): Promise<void> {
+  await AppDataSource.initialize();
+  Logger.info("Database connected");
 
-  app.disable("x-powered-by");
-  app.use(requestId);
-  app.use(express.json());
+  const app = createApp();
 
-  const validator = OpenApiValidator.middleware({
-    apiSpec: join(process.cwd(), "spec", "openapi.json"),
-    ignoreUndocumented: true,
-    validateRequests: { coerceTypes: true },
-    validateResponses: true,
-  });
-
-  for (const middleware of validator) {
-    app.use((req, res, next) => {
-      middleware(req, res, (err) => {
-        if (err) {
-          const message = errorMeta(err).message;
-          const status =
-            typeof err === "object" &&
-            err !== null &&
-            "status" in err &&
-            typeof err.status === "number"
-              ? err.status
-              : 400;
-          HttpError.handle(req, HttpError.fromStatus(status, message));
-          return;
-        }
-        next();
-      });
-    });
-  }
-
-  app.use("/health", healthRouter);
-  app.use("/auth", authRouter);
-  app.use("/organizations", organizationRouter);
-  app.use(projectsRouter);
-  app.use(tasksRouter);
-
-  if (!config.isProduction) {
-    const spec = JSON.parse(
-      readFileSync(join(process.cwd(), "spec", "openapi.json"), "utf8"),
+  const server = app.listen(config.port, config.host, () => {
+    Logger.info(
+      `SecureFlow API listening on http://${config.host}:${config.port} (env: ${config.nodeEnv})`,
     );
-    app.use("/docs", swaggerUi.serve, swaggerUi.setup(spec));
-  }
-
-  app.use((req, _res) => {
-    HttpError.handle(req, new HttpError.NotFound("Route not found"));
   });
 
-  return app;
+  function shutdown(signal: NodeJS.Signals): void {
+    Logger.info(`Received ${signal}, shutting down gracefully`);
+    server.close(async (err) => {
+      if (err) {
+        Logger.error("Error while closing server", err);
+        process.exit(1);
+      }
+      await AppDataSource.destroy();
+      await redis.quit().catch(() => redis.disconnect());
+      Logger.info("Server closed cleanly");
+      process.exit(0);
+    });
+
+    server.closeIdleConnections();
+
+    setTimeout(() => {
+      server.closeAllConnections();
+      Logger.error("Forced shutdown after timeout");
+      process.exit(1);
+    }, 10_000).unref();
+  }
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
+
+bootstrap().catch((err) => {
+  Logger.error("Failed to start", err);
+  process.exit(1);
+});
+
+process.on("uncaughtException", (err) => {
+  Logger.error("Uncaught exception, restarting", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  Logger.error("Unhandled rejection, restarting", reason);
+  process.exit(1);
+});
