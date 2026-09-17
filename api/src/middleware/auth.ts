@@ -7,6 +7,23 @@ import { SessionService } from "@/services/index.js";
 
 const sessions = Container.get(SessionService);
 
+/** Verify a bearer token. */
+function verifyToken(token: string): { sub: string; jti: string } {
+  const payload = (() => {
+    try {
+      return jwt.verify(token, config.jwtSecret);
+    } catch {
+      throw new HttpError.Unauthorized("Invalid or expired token");
+    }
+  })();
+
+  if (!payload || typeof payload === "string" || !payload.sub || !payload.jti) {
+    throw new HttpError.Unauthorized("Invalid token");
+  }
+
+  return { sub: payload.sub, jti: payload.jti };
+}
+
 /** Requires a valid Bearer token with a live session; sets actor and jti on res.locals. */
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -16,10 +33,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       throw new HttpError.Unauthorized("Missing bearer token");
     }
 
-    const payload = jwt.verify(token, config.jwtSecret);
-    if (typeof payload === "string" || !payload.sub || !payload.jti) {
-      throw new HttpError.Unauthorized("Invalid token");
-    }
+    const payload = verifyToken(token);
 
     const valid = await sessions.verify(payload.jti, payload.sub);
     if (!valid) {
