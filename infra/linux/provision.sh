@@ -19,13 +19,13 @@ UNIT_NAME="secureflow-api"
 UNIT_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/${UNIT_NAME}.service"
 ENV_FILE="${APP_DIR}/.env"
 
-# Not generated here — supply it:  sudo DB_PASSWORD=... bash provision.sh
-DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD must be set — this script does not generate secrets}"
+DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD must be set}"
+REDIS_PASSWORD="${REDIS_PASSWORD:?REDIS_PASSWORD must be set}"
 
 echo "==> Base packages"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
-apt-get install -y -q ca-certificates curl gnupg
+apt-get install -y -q ca-certificates curl gnupg rsync
 
 echo "==> Node ${NODE_MAJOR}.x"
 if command -v node >/dev/null 2>&1 && [[ "$(node -v)" == "v${NODE_MAJOR}."* ]]; then
@@ -48,7 +48,24 @@ apt-get install -y -q postgresql redis-server
 systemctl enable --now postgresql
 systemctl enable --now redis-server
 pg_isready -q || echo "    ! postgres is not accepting connections yet"
-redis-cli ping >/dev/null 2>&1 || echo "    ! redis did not answer PING"
+
+echo "==> Redis auth"
+install -d -o root -g redis -m 0750 /etc/redis/redis.conf.d
+(
+  umask 077
+  cat > /etc/redis/redis.conf.d/10-secureflow.conf <<EOF
+requirepass ${REDIS_PASSWORD}
+EOF
+)
+chown redis:redis /etc/redis/redis.conf.d/10-secureflow.conf
+chmod 0640 /etc/redis/redis.conf.d/10-secureflow.conf
+grep -q '^include /etc/redis/redis.conf.d/10-secureflow.conf' /etc/redis/redis.conf || \
+  printf '\ninclude /etc/redis/redis.conf.d/10-secureflow.conf\n' >> /etc/redis/redis.conf
+systemctl restart redis-server
+REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli ping | grep -q PONG || \
+  echo "    ! authenticated PING failed"
+redis-cli ping 2>&1 | grep -q NOAUTH || \
+  echo "    ! redis answered without a password"
 
 echo "==> Service user"
 if id -u "$APP_USER" >/dev/null 2>&1; then
@@ -87,15 +104,20 @@ fi
 
 echo "==> Secrets file"
 if [[ -f "$ENV_FILE" ]]; then
-  echo "    ${ENV_FILE} exists"
+  tmp="${ENV_FILE}.new"
+  ( umask 077; grep -v '^REDIS_URL=' "$ENV_FILE" > "$tmp" || true )
+  printf 'REDIS_URL=redis://:%s@127.0.0.1:6379\n' "$REDIS_PASSWORD" >> "$tmp"
+  chown "${APP_USER}:${APP_USER}" "$tmp"
+  chmod 0600 "$tmp"
+  mv "$tmp" "$ENV_FILE"
+  echo "    ${ENV_FILE} exists — REDIS_URL reconciled"
 else
   (
     umask 077
     cat > "$ENV_FILE" <<EOF
-
 JWT_SECRET=$(openssl rand -hex 32)
 DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@127.0.0.1:5432/${DB_NAME}
-REDIS_URL=redis://127.0.0.1:6379
+REDIS_URL=redis://:${REDIS_PASSWORD}@127.0.0.1:6379
 EOF
   )
   chown "${APP_USER}:${APP_USER}" "$ENV_FILE"
@@ -105,7 +127,7 @@ fi
 
 echo "==> Journald log bounds"
 install -d -m 0755 /etc/systemd/journald.conf.d
-
+cat > /etc/systemd/journald.conf.d/10-secureflow.conf <<EOF
 [Journal]
 Storage=persistent
 SystemMaxUse=${JOURNAL_MAX_USE}
@@ -127,7 +149,7 @@ printf '    user      %s\n' "$APP_USER"
 printf '    app dir   %s\n' "$APP_DIR"
 printf '    env file  %s (0600)\n' "$ENV_FILE"
 printf '    database  %s at 127.0.0.1:5432 (password auth)\n' "$DB_NAME"
-printf '    redis     redis://127.0.0.1:6379\n'
+printf '    redis     127.0.0.1:6379 (password auth)\n'
 printf '    unit      %s.service (enabled, not started)\n' "$UNIT_NAME"
 printf '    logs      journald, persistent, max %s / %s\n' "$JOURNAL_MAX_USE" "$JOURNAL_RETENTION"
 

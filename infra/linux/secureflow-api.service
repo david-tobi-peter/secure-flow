@@ -20,7 +20,7 @@ ExecStart=/usr/bin/node /opt/secureflow/dist/index.js
 
 # --- non-secret configuration -----------
 Environment=NODE_ENV=production
-Environment=PORT=3000
+Environment=PORT=2230
 Environment=HOST=127.0.0.1
 Environment=LOG_LEVEL=info
 
