@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/auth/pow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a proof-of-work challenge */
+        post: operations["issuePowChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -256,6 +273,12 @@ export interface components {
             email: string;
             password: string;
         };
+        PowChallenge: {
+            challenge: string;
+            difficulty: number;
+            algorithm: string;
+            expiresAt: number;
+        };
         User: {
             /** Format: uuid */
             id: string;
@@ -413,6 +436,15 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
+        /** @description Proof of work required */
+        POWRequired: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
     };
     parameters: {
         Page: number;
@@ -424,6 +456,28 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    issuePowChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Challenge issued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"] & {
+                        data: components["schemas"]["PowChallenge"];
+                    };
+                };
+            };
+        };
+    };
     registerUser: {
         parameters: {
             query?: never;
@@ -478,6 +532,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            428: components["responses"]["POWRequired"];
         };
     };
     logoutUser: {

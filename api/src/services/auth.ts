@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { AppDataSource, User } from "@/database/index.js";
 import { config } from "@/config/index.js";
 import { HttpError } from "@/errors/index.js";
+import { Normalizer } from "@/helpers/index.js";
 import { Logger } from "@/loggers/index.js";
 import { Container } from "typedi";
 import { SessionService } from "./session.js";
@@ -26,14 +27,16 @@ export class AuthService {
 
   /** Register a new user and return a token. */
   async register(payload: RegisterRequest): Promise<AuthResult> {
-    const existing = await this.users.findOneBy({ email: payload.email });
+    const email = Normalizer.email(payload.email);
+
+    const existing = await this.users.findOneBy({ email });
     if (existing) {
       throw new HttpError.Conflict("Email already registered");
     }
 
     const password = await bcrypt.hash(payload.password, BCRYPT_ROUNDS);
 
-    const user = this.users.create({ email: payload.email, password, name: payload.name });
+    const user = this.users.create({ email, password, name: payload.name });
     await this.users.save(user);
     Logger.info("User registered", { userId: user.id });
 
@@ -42,7 +45,7 @@ export class AuthService {
 
   /** Verify credentials and return a token. */
   async login(payload: LoginRequest): Promise<AuthResult> {
-    const user = await this.users.findOneBy({ email: payload.email });
+    const user = await this.users.findOneBy({ email: Normalizer.email(payload.email) });
 
     const validCredentials = await bcrypt.compare(payload.password, user?.password ?? DUMMY_HASH);
     if (!user || !validCredentials) {

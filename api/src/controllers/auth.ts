@@ -3,7 +3,7 @@ import { Container, Service } from "typedi";
 import { ApiResponse } from "@/helpers/index.js";
 import { Controller } from "@/decorators/index.js";
 import { HttpError } from "@/errors/index.js";
-import { AuthService, SessionService } from "@/services/index.js";
+import { AuthService, PowService, RateLimitService, SessionService } from "@/services/index.js";
 import type { LoginRequest, RegisterRequest } from "@/types/index.js";
 
 /** HTTP layer for the auth endpoints. */
@@ -12,10 +12,30 @@ import type { LoginRequest, RegisterRequest } from "@/types/index.js";
 export class AuthController {
   private readonly authService: AuthService;
   private readonly sessions: SessionService;
+  private readonly rateLimit: RateLimitService;
+  private readonly powService: PowService;
 
   constructor() {
     this.authService = Container.get(AuthService);
     this.sessions = Container.get(SessionService);
+    this.rateLimit = Container.get(RateLimitService);
+    this.powService = Container.get(PowService);
+  }
+
+  /**
+   * Issue a proof-of-work challenge to a flagged address.
+   *
+   * @param req
+   * @param res
+   */
+  async pow(req: Request, res: Response): Promise<void> {
+    try {
+      const ip = req.ip ?? "unknown";
+
+      ApiResponse.send(res, 200, "Proof-of-work challenge", this.powService.issue(ip));
+    } catch (err) {
+      HttpError.handle(req, err);
+    }
   }
 
   /**
@@ -42,12 +62,17 @@ export class AuthController {
    * @param res
    */
   async login(req: Request, res: Response): Promise<void> {
+    const payload = req.body as LoginRequest;
+    const ip = req.ip ?? "unknown";
+
     try {
-      const payload = req.body as LoginRequest;
       const result = await this.authService.login(payload);
 
       ApiResponse.send(res, 200, "Logged in", result);
     } catch (err) {
+      if (err instanceof HttpError && err.statusCode === 401) {
+        await this.rateLimit.recordPasswordFailure(ip);
+      }
       HttpError.handle(req, err);
     }
   }

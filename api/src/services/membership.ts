@@ -7,6 +7,7 @@ import {
 } from "@/database/index.js";
 import type { Member } from "@/types/index.js";
 import { HttpError } from "@/errors/index.js";
+import { Normalizer } from "@/helpers/index.js";
 import { Logger } from "@/loggers/index.js";
 
 /** Memberships: membership checks, invites, and role changes. */
@@ -77,7 +78,7 @@ export class MembershipService {
   async invite(actorId: string, orgId: string, email: string): Promise<Member> {
     await this.requireRole(actorId, orgId, ["owner", "admin"]);
 
-    const user = await this.users.findOneBy({ email });
+    const user = await this.users.findOneBy({ email: Normalizer.email(email) });
     if (!user) {
       throw new HttpError.NotFound("User not found");
     }

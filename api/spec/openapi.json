@@ -89,6 +89,16 @@
             }
           }
         }
+      },
+      "POWRequired": {
+        "description": "Proof of work required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
       }
     },
     "schemas": {
@@ -214,6 +224,30 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "PowChallenge": {
+        "type": "object",
+        "required": [
+          "challenge",
+          "difficulty",
+          "algorithm",
+          "expiresAt"
+        ],
+        "properties": {
+          "challenge": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "algorithm": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "integer"
           }
         }
       },
@@ -688,6 +722,42 @@
     }
   },
   "paths": {
+    "/auth/pow": {
+      "post": {
+        "summary": "Request a proof-of-work challenge",
+        "operationId": "issuePowChallenge",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Challenge issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/APIResponse"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PowChallenge"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/register": {
       "post": {
         "summary": "Register a new user",
@@ -788,6 +858,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "428": {
+            "$ref": "#/components/responses/POWRequired"
           }
         }
       }
