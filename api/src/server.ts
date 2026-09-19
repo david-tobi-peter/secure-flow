@@ -19,8 +19,8 @@ export function createApp(): express.Express {
 
   const validator = OpenApiValidator.middleware({
     apiSpec: join(process.cwd(), "spec", "openapi.json"),
-    ignoreUndocumented: true,
-    validateRequests: { coerceTypes: true },
+    ignoreUndocumented: false,
+    validateRequests: { coerceTypes: false },
     validateResponses: true,
   });
 

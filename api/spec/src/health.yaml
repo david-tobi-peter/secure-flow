@@ -58,7 +58,8 @@ schemas:
               - ok
               - down
       uptime:
-        type: number
+        type: string
+        description: Uptime as days, hours, minutes and seconds, e.g. "3d 4h 38m 12s".
       timestamp:
         type: string
         format: date-time

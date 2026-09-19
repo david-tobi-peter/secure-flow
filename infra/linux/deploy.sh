@@ -18,7 +18,7 @@ ENV_FILE="${APP_DIR}/.env"
 
 as_app() {
   cd "$APP_DIR"
-  sudo -u "$APP_USER" env HOME="$APP_DIR" bash -c "set -e; $*"
+  sudo -u "$APP_USER" env HOME="$APP_DIR" bash -c "set -e; umask 0027; $*"
 }
 
 echo "==> Copy code to ${APP_DIR}"
