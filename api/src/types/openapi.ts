@@ -445,6 +445,15 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
+        /** @description Too many requests */
+        TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
     };
     parameters: {
         Page: number;
@@ -476,6 +485,7 @@ export interface operations {
                     };
                 };
             };
+            429: components["responses"]["TooManyRequests"];
         };
     };
     registerUser: {

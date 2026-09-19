@@ -5,11 +5,14 @@ import { Logger } from "@/loggers/index.js";
 /** Rate limiting for the authentication endpoints. */
 @Service()
 export class RateLimitService {
-  /** Window for failed password attempts from one address — 1m. */
+  /** Per-address counting window — 1m. */
   private static readonly IP_WINDOW_SECONDS = 60;
 
   /** Failed attempts from one address before it must solve proof-of-work. */
   private static readonly IP_FAILURE_THRESHOLD = 10;
+
+  /** Challenges issued to one address inside the window. */
+  private static readonly CHALLENGE_THRESHOLD = 30;
 
   /** How long a flagged address must solve proof-of-work — 48h. */
   private static readonly FLAG_TTL_SECONDS = 48 * 60 * 60;
@@ -26,6 +29,10 @@ export class RateLimitService {
 
   private static flagKey(ip: string): string {
     return `auth:ip:${ip}:flagged`;
+  }
+
+  private static challengesKey(ip: string): string {
+    return `auth:ip:${ip}:challenges`;
   }
 
   private static totpKey(email: string): string {
@@ -63,6 +70,21 @@ export class RateLimitService {
     if (set === "OK") {
       Logger.warn("IP flagged for PoW", { ip, failCount });
     }
+  }
+
+  /**
+   * Count a challenge request; false once this address is past the cap.
+   *
+   * @param ip
+   */
+  async allowChallenge(ip: string): Promise<boolean> {
+    const challengesKey = RateLimitService.challengesKey(ip);
+    const issued = await redis.incr(challengesKey);
+    if (issued === 1) {
+      await redis.expire(challengesKey, RateLimitService.IP_WINDOW_SECONDS);
+    }
+
+    return issued <= RateLimitService.CHALLENGE_THRESHOLD;
   }
 
   /**

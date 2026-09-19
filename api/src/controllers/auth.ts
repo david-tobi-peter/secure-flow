@@ -31,6 +31,9 @@ export class AuthController {
   async pow(req: Request, res: Response): Promise<void> {
     try {
       const ip = req.ip ?? "unknown";
+      if (!(await this.rateLimit.allowChallenge(ip))) {
+        throw new HttpError.TooManyRequests("Too many challenge requests");
+      }
 
       ApiResponse.send(res, 200, "Proof-of-work challenge", this.powService.issue(ip));
     } catch (err) {

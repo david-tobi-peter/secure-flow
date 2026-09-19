@@ -19,6 +19,8 @@ paths:
                     properties:
                       data:
                         $ref: "#/components/schemas/PowChallenge"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /auth/register:
     post:
