@@ -2,6 +2,7 @@ import { Container, Service } from "typedi";
 import { AppDataSource, Task } from "@/database/index.js";
 import type { CreateTaskRequest, Task as TaskResponse, UpdateTaskRequest } from "@/types/index.js";
 import { HttpError } from "@/errors/index.js";
+import { Logger } from "@/loggers/index.js";
 import { MembershipService } from "./membership.js";
 import { ProjectService } from "./project.js";
 
@@ -34,6 +35,7 @@ export class TaskService {
     });
 
     await this.tasks.save(task);
+    Logger.info("Task created", { actorId, orgId, projectId, taskId: task.id });
     return this.toTaskResponse(task);
   }
 
@@ -117,6 +119,7 @@ export class TaskService {
     }
 
     await this.tasks.save(task);
+    Logger.info("Task updated", { actorId, orgId, projectId, taskId });
     return this.toTaskResponse(task);
   }
 
@@ -132,6 +135,7 @@ export class TaskService {
     }
 
     await this.tasks.remove(task);
+    Logger.info("Task deleted", { actorId, orgId, projectId, taskId });
   }
 
   private toTaskResponse(task: Task): TaskResponse {

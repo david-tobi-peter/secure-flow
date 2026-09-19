@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { AppDataSource, User } from "@/database/index.js";
 import { config } from "@/config/index.js";
 import { HttpError } from "@/errors/index.js";
+import { Logger } from "@/loggers/index.js";
 import { Container } from "typedi";
 import { SessionService } from "./session.js";
 import type { AuthResult, LoginRequest, RegisterRequest } from "@/types/index.js";
@@ -34,6 +35,7 @@ export class AuthService {
 
     const user = this.users.create({ email: payload.email, password, name: payload.name });
     await this.users.save(user);
+    Logger.info("User registered", { userId: user.id });
 
     return this.session(user);
   }
@@ -46,6 +48,8 @@ export class AuthService {
     if (!user || !validCredentials) {
       throw new HttpError.Unauthorized("Invalid credentials");
     }
+
+    Logger.info("User logged in", { userId: user.id });
 
     return this.session(user);
   }

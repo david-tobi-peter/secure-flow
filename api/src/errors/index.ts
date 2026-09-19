@@ -39,12 +39,11 @@ export abstract class HttpError extends Error {
     if (!res) {
       return;
     }
-    const requestId = (res.locals.requestId as string | undefined) ?? null;
     res.status(this.statusCode).json({
       error: {
         code: this.code,
         message: this.message,
-        ...(requestId && { requestId }),
+        ...HttpError.requestIdOf(req),
       },
     });
   }
@@ -97,19 +96,37 @@ export abstract class HttpError extends Error {
    */
   static handle(req: Request, err: unknown): void {
     if (err instanceof HttpError) {
+      HttpError.logError(req, err);
       err.respond(req);
       return;
     }
-    
+
     const databaseError = HttpError.fromDatabase(err);
     if (databaseError) {
+      HttpError.logError(req, databaseError);
       databaseError.respond(req);
       return;
     }
-    
-    const requestId = (req.res?.locals.requestId as string | undefined) ?? null;
-    Logger.error("Unhandled error", { requestId, ...errorMeta(err) });
+
+    Logger.error("Unhandled error", { ...HttpError.requestIdOf(req), ...errorMeta(err) });
     new HttpError.Internal("Internal server error").respond(req);
+  }
+
+  /** Log an HttpError with the request that raised it. */
+  private static logError(req: Request, err: HttpError): void {
+    Logger.error(err.message, {
+      ...HttpError.requestIdOf(req),
+      method: req.method,
+      path: req.path,
+      status: err.statusCode,
+      code: err.code,
+    });
+  }
+
+  /** The request's correlation id as a spreadable field, omitted when absent. */
+  private static requestIdOf(req: Request): { requestId?: string } {
+    const requestId = req.res?.locals.requestId as string | undefined;
+    return requestId ? { requestId } : {};
   }
 }
 

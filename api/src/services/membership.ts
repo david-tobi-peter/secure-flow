@@ -7,6 +7,7 @@ import {
 } from "@/database/index.js";
 import type { Member } from "@/types/index.js";
 import { HttpError } from "@/errors/index.js";
+import { Logger } from "@/loggers/index.js";
 
 /** Memberships: membership checks, invites, and role changes. */
 @Service()
@@ -95,6 +96,7 @@ export class MembershipService {
       role: "member",
     });
     await this.memberships.save(membership);
+    Logger.info("Member invited", { actorId, orgId, userId: user.id });
 
     return {
       id: user.id,
@@ -128,6 +130,7 @@ export class MembershipService {
 
     membership.role = role;
     await this.memberships.save(membership);
+    Logger.info("Member role changed", { actorId, orgId, userId, role });
 
     return {
       id: membership.user.id,
@@ -154,5 +157,6 @@ export class MembershipService {
     }
 
     await this.memberships.remove(membership);
+    Logger.info("Member revoked", { actorId, orgId, userId });
   }
 }

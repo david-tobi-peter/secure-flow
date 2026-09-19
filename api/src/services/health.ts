@@ -4,6 +4,26 @@ import type { HealthResponse } from "@/types/index.js";
 
 const PROBE_TIMEOUT_MS = 2000;
 
+const MINUTE = 60;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+function formatUptime(seconds: number): string {
+  const total = Math.floor(seconds);
+  const components: [number, string][] = [
+    [Math.floor(total / DAY), "d"],
+    [Math.floor(total / HOUR) % 24, "h"],
+    [Math.floor(total / MINUTE) % 60, "m"],
+    [total % MINUTE, "s"],
+  ];
+
+  const rendered = components
+    .filter(([value]) => value > 0)
+    .map(([value, label]) => `${value}${label}`);
+
+  return rendered.length > 0 ? rendered.join(" ") : "0s";
+}
+
 /** Reports the API's liveness and the state of its dependencies. */
 @Service()
 export class HealthService {
@@ -13,11 +33,12 @@ export class HealthService {
       this.probe(AppDataSource.query("SELECT 1")),
       this.probe(redis.ping()),
     ]);
+    const uptime = process.uptime();
 
     return {
       status: postgres === "ok" && redisStatus === "ok" ? "ok" : "degraded",
       checks: { postgres, redis: redisStatus },
-      uptime: process.uptime(),
+      uptime: formatUptime(uptime),
       timestamp: new Date().toISOString(),
     };
   }

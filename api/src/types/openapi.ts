@@ -279,7 +279,8 @@ export interface components {
                 /** @enum {string} */
                 redis: "ok" | "down";
             };
-            uptime: number;
+            /** @description Uptime as days, hours, minutes and seconds, e.g. "3d 4h 38m 12s". */
+            uptime: string;
             /** Format: date-time */
             timestamp: string;
         };
@@ -413,7 +414,10 @@ export interface components {
             };
         };
     };
-    parameters: never;
+    parameters: {
+        Page: number;
+        Limit: number;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -529,8 +533,8 @@ export interface operations {
     listMembers: {
         parameters: {
             query?: {
-                page?: number;
-                limit?: number;
+                page?: components["parameters"]["Page"];
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -645,8 +649,8 @@ export interface operations {
     listOrganizations: {
         parameters: {
             query?: {
-                page?: number;
-                limit?: number;
+                page?: components["parameters"]["Page"];
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path?: never;
@@ -719,8 +723,8 @@ export interface operations {
     listProjects: {
         parameters: {
             query?: {
-                page?: number;
-                limit?: number;
+                page?: components["parameters"]["Page"];
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -825,8 +829,8 @@ export interface operations {
     listTasks: {
         parameters: {
             query?: {
-                page?: number;
-                limit?: number;
+                page?: components["parameters"]["Page"];
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {

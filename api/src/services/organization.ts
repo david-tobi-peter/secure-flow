@@ -5,6 +5,7 @@ import {
   Organization as OrganizationEntity,
 } from "@/database/index.js";
 import type { Organization as OrganizationResponse } from "@/types/index.js";
+import { Logger } from "@/loggers/index.js";
 import { MembershipService } from "./membership.js";
 
 /** Organizations: create, list, and view, scoped to the caller's membership. */
@@ -33,6 +34,8 @@ export class OrganizationService {
 
       return org;
     });
+
+    Logger.info("Organization created", { actorId, orgId: createdOrg.id });
 
     return this.toOrganizationResponse(createdOrg);
   }
