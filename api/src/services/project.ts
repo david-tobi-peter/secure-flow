@@ -2,6 +2,7 @@ import { Container, Service } from "typedi";
 import { AppDataSource, Project } from "@/database/index.js";
 import type { Project as ProjectResponse } from "@/types/index.js";
 import { HttpError } from "@/errors/index.js";
+import { Logger } from "@/loggers/index.js";
 import { MembershipService } from "./membership.js";
 
 /** Projects: tenant-scoped create, list, get, and delete. */
@@ -20,6 +21,7 @@ export class ProjectService {
 
     const project = this.projects.create({ organization: { id: orgId }, name });
     await this.projects.save(project);
+    Logger.info("Project created", { actorId, orgId, projectId: project.id });
     return this.toProjectResponse(project);
   }
 
@@ -82,6 +84,7 @@ export class ProjectService {
     }
 
     await this.projects.remove(project);
+    Logger.info("Project deleted", { actorId, orgId, projectId });
   }
 
   private toProjectResponse(project: Project): ProjectResponse {
