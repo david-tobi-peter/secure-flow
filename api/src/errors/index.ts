@@ -26,6 +26,9 @@ export abstract class HttpError extends Error {
   static get TooManyRequests(): typeof TooManyRequestsError {
     return TooManyRequestsError;
   }
+  static get PayloadTooLarge(): typeof PayloadTooLargeError {
+    return PayloadTooLargeError;
+  }
   static get Internal(): typeof InternalError {
     return InternalError;
   }
@@ -66,37 +69,6 @@ export abstract class HttpError extends Error {
       return null;
     }
     return SQLSTATE_ERRORS[state]?.() ?? null;
-  }
-
-  /**
-   * Map an HTTP status code to the matching error class.
-   *
-   * @param status
-   * @param message
-   */
-  static fromStatus(status: number, message: string): HttpError {
-    if (status >= 500) {
-      return new HttpError.Internal(message);
-    }
-    if (status === 401) {
-      return new HttpError.Unauthorized(message);
-    }
-    if (status === 403) {
-      return new HttpError.Forbidden(message);
-    }
-    if (status === 404) {
-      return new HttpError.NotFound(message);
-    }
-    if (status === 409) {
-      return new HttpError.Conflict(message);
-    }
-    if (status === 428) {
-      return new HttpError.POWRequired(message);
-    }
-    if (status === 429) {
-      return new HttpError.TooManyRequests(message);
-    }
-    return new HttpError.BadRequest(message);
   }
 
   /**
@@ -175,6 +147,11 @@ class POWRequiredError extends HttpError {
 class TooManyRequestsError extends HttpError {
   statusCode = 429;
   code = "TOO_MANY_REQUESTS";
+}
+
+class PayloadTooLargeError extends HttpError {
+  statusCode = 413;
+  code = "PAYLOAD_TOO_LARGE";
 }
 
 class InternalError extends HttpError {

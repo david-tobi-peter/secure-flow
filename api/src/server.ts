@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import express from "express";
+import type { RequestHandler } from "express";
 import swaggerUi from "swagger-ui-express";
 import OpenApiValidator from "express-openapi-validator";
 import { config } from "@/config/index.js";
@@ -9,13 +10,39 @@ import { authRouter, healthRouter, organizationRouter, projectsRouter, tasksRout
 import { HttpError } from "@/errors/index.js";
 import { errorMeta } from "@/loggers/index.js";
 
+/** Largest request body accepted, enforced by the parser as it reads the stream - 100KB. */
+const MAX_BODY_BYTES = 100 * 1024;
+
+type HttpErrorClass = new (message: string) => HttpError;
+
+/** Wrap a middleware with appropriate error class */
+function withEnvelope(
+  middleware: RequestHandler,
+  errorFor: (err: unknown) => HttpErrorClass,
+): RequestHandler {
+  return (req, res, next) => {
+    middleware(req, res, (err?: unknown) => {
+      if (err) {
+        const ErrorClass = errorFor(err);
+        HttpError.handle(req, new ErrorClass(errorMeta(err).message));
+        return;
+      }
+      next();
+    });
+  };
+}
+
 /** Builds the Express app: middleware, OpenAPI validation, routes. */
 export function createApp(): express.Express {
   const app = express();
 
   app.disable("x-powered-by");
   app.use(requestId);
-  app.use(express.json());
+  app.use(
+    withEnvelope(express.json({ limit: MAX_BODY_BYTES }), (err) =>
+      err instanceof SyntaxError ? HttpError.BadRequest : HttpError.PayloadTooLarge,
+    ),
+  );
 
   const validator = OpenApiValidator.middleware({
     apiSpec: join(process.cwd(), "spec", "openapi.json"),
@@ -25,23 +52,7 @@ export function createApp(): express.Express {
   });
 
   for (const middleware of validator) {
-    app.use((req, res, next) => {
-      middleware(req, res, (err) => {
-        if (err) {
-          const message = errorMeta(err).message;
-          const status =
-            typeof err === "object" &&
-            err !== null &&
-            "status" in err &&
-            typeof err.status === "number"
-              ? err.status
-              : 400;
-          HttpError.handle(req, HttpError.fromStatus(status, message));
-          return;
-        }
-        next();
-      });
-    });
+    app.use(withEnvelope(middleware, () => HttpError.BadRequest));
   }
 
   app.use("/health", healthRouter);

@@ -52,6 +52,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "409":
           $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
 
   /auth/setup-2fa:
     post:
@@ -60,6 +62,9 @@ paths:
       operationId: setupTwoFactor
       tags:
         - auth
+      parameters:
+        - $ref: "#/components/parameters/PowChallengeHeader"
+        - $ref: "#/components/parameters/PowSolutionHeader"
       requestBody:
         required: true
         content:
@@ -84,6 +89,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "428":
           $ref: "#/components/responses/POWRequired"
 
@@ -93,6 +100,9 @@ paths:
       operationId: loginUser
       tags:
         - auth
+      parameters:
+        - $ref: "#/components/parameters/PowChallengeHeader"
+        - $ref: "#/components/parameters/PowSolutionHeader"
       requestBody:
         required: true
         content:
@@ -117,6 +127,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "428":
           $ref: "#/components/responses/POWRequired"
 
@@ -150,6 +162,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
         "429":
           $ref: "#/components/responses/TooManyRequests"
 

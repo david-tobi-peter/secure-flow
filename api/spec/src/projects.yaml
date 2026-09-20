@@ -33,6 +33,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
     get:
       summary: List projects in an organization
       operationId: listProjects

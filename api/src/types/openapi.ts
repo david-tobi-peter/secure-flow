@@ -496,7 +496,16 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
-        /** @description Proof of work required */
+        /** @description Request body exceeds the accepted size */
+        PayloadTooLarge: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Proof of work required; fetch a challenge from `POST /auth/pow`, solve it, and retry with the `x-pow-challenge` and `x-pow-solution` headers. */
         POWRequired: {
             headers: {
                 [name: string]: unknown;
@@ -518,6 +527,10 @@ export interface components {
     parameters: {
         Page: number;
         Limit: number;
+        /** @description Challenge from `POST /auth/pow`, required once the source address is flagged. */
+        PowChallengeHeader: string;
+        /** @description Nonce that solves the challenge, sent alongside it. */
+        PowSolutionHeader: string;
     };
     requestBodies: never;
     headers: never;
@@ -574,12 +587,18 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
         };
     };
     setupTwoFactor: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Challenge from `POST /auth/pow`, required once the source address is flagged. */
+                "x-pow-challenge"?: components["parameters"]["PowChallengeHeader"];
+                /** @description Nonce that solves the challenge, sent alongside it. */
+                "x-pow-solution"?: components["parameters"]["PowSolutionHeader"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -602,13 +621,19 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            413: components["responses"]["PayloadTooLarge"];
             428: components["responses"]["POWRequired"];
         };
     };
     loginUser: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Challenge from `POST /auth/pow`, required once the source address is flagged. */
+                "x-pow-challenge"?: components["parameters"]["PowChallengeHeader"];
+                /** @description Nonce that solves the challenge, sent alongside it. */
+                "x-pow-solution"?: components["parameters"]["PowSolutionHeader"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -631,6 +656,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            413: components["responses"]["PayloadTooLarge"];
             428: components["responses"]["POWRequired"];
         };
     };
@@ -660,6 +686,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            413: components["responses"]["PayloadTooLarge"];
             429: components["responses"]["TooManyRequests"];
         };
     };
@@ -769,6 +796,7 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
         };
     };
     revokeMember: {
@@ -827,6 +855,7 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            413: components["responses"]["PayloadTooLarge"];
         };
     };
     listOrganizations: {
@@ -877,6 +906,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            413: components["responses"]["PayloadTooLarge"];
         };
     };
     getOrganization: {
@@ -957,6 +987,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            413: components["responses"]["PayloadTooLarge"];
         };
     };
     getProject: {
@@ -1065,6 +1096,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            413: components["responses"]["PayloadTooLarge"];
         };
     };
     getTask: {
@@ -1148,6 +1180,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            413: components["responses"]["PayloadTooLarge"];
         };
     };
 }
