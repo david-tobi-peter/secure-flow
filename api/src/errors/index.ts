@@ -20,6 +20,12 @@ export abstract class HttpError extends Error {
   static get Conflict(): typeof ConflictError {
     return ConflictError;
   }
+  static get POWRequired(): typeof POWRequiredError {
+    return POWRequiredError;
+  }
+  static get TooManyRequests(): typeof TooManyRequestsError {
+    return TooManyRequestsError;
+  }
   static get Internal(): typeof InternalError {
     return InternalError;
   }
@@ -83,6 +89,12 @@ export abstract class HttpError extends Error {
     }
     if (status === 409) {
       return new HttpError.Conflict(message);
+    }
+    if (status === 428) {
+      return new HttpError.POWRequired(message);
+    }
+    if (status === 429) {
+      return new HttpError.TooManyRequests(message);
     }
     return new HttpError.BadRequest(message);
   }
@@ -153,6 +165,16 @@ class NotFoundError extends HttpError {
 class ConflictError extends HttpError {
   statusCode = 409;
   code = "CONFLICT";
+}
+
+class POWRequiredError extends HttpError {
+  statusCode = 428;
+  code = "POW_REQUIRED";
+}
+
+class TooManyRequestsError extends HttpError {
+  statusCode = 429;
+  code = "TOO_MANY_REQUESTS";
 }
 
 class InternalError extends HttpError {

@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/auth/pow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a proof-of-work challenge */
+        post: operations["issuePowChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -21,6 +38,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/setup-2fa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set up two-factor authentication
+         * @description Proves the account with the token from registration, or with the email and password once that token has expired.
+         */
+        post: operations["setupTwoFactor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -30,8 +67,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Log in */
+        /** Check a password and open the two-factor step */
         post: operations["loginUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/verify-totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange a two-factor code for a session */
+        post: operations["verifyTotp"];
         delete?: never;
         options?: never;
         head?: never;
@@ -251,10 +305,39 @@ export interface components {
             password: string;
             name: string;
         };
+        RegisterResult: {
+            verificationToken: string;
+        };
+        SetupTwoFactorRequest: components["schemas"]["SetupTwoFactorTokenRequest"] | components["schemas"]["SetupTwoFactorCredentialsRequest"];
+        SetupTwoFactorTokenRequest: {
+            verificationToken: string;
+        };
+        SetupTwoFactorCredentialsRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
+        };
+        SetupTwoFactorResult: {
+            secret: string;
+            otpauthUrl: string;
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
             password: string;
+        };
+        PendingLogin: {
+            pendingToken: string;
+        };
+        VerifyTotpRequest: {
+            pendingToken: string;
+            code: string;
+        };
+        PowChallenge: {
+            challenge: string;
+            difficulty: number;
+            algorithm: string;
+            expiresAt: number;
         };
         User: {
             /** Format: uuid */
@@ -413,6 +496,24 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
+        /** @description Proof of work required */
+        POWRequired: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Too many requests */
+        TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
     };
     parameters: {
         Page: number;
@@ -424,6 +525,29 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    issuePowChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Challenge issued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"] & {
+                        data: components["schemas"]["PowChallenge"];
+                    };
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
     registerUser: {
         parameters: {
             query?: never;
@@ -437,19 +561,48 @@ export interface operations {
             };
         };
         responses: {
-            /** @description User registered */
+            /** @description User registered; the token authorises two-factor setup */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["APIResponse"] & {
-                        data: components["schemas"]["AuthResult"];
+                        data: components["schemas"]["RegisterResult"];
                     };
                 };
             };
             400: components["responses"]["BadRequest"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    setupTwoFactor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetupTwoFactorRequest"];
+            };
+        };
+        responses: {
+            /** @description Authenticator secret issued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"] & {
+                        data: components["schemas"]["SetupTwoFactorResult"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            428: components["responses"]["POWRequired"];
         };
     };
     loginUser: {
@@ -462,6 +615,35 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Credentials accepted; two-factor code still required */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"] & {
+                        data: components["schemas"]["PendingLogin"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            428: components["responses"]["POWRequired"];
+        };
+    };
+    verifyTotp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyTotpRequest"];
             };
         };
         responses: {
@@ -478,6 +660,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     logoutUser: {

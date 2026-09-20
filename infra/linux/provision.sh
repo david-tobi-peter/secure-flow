@@ -107,15 +107,20 @@ if [[ -f "$ENV_FILE" ]]; then
   tmp="${ENV_FILE}.new"
   ( umask 077; grep -v '^REDIS_URL=' "$ENV_FILE" > "$tmp" || true )
   printf 'REDIS_URL=redis://:%s@127.0.0.1:6379\n' "$REDIS_PASSWORD" >> "$tmp"
+  for secret in JWT_SECRET POW_SECRET TOTP_SECRET; do
+    grep -q "^${secret}=" "$tmp" || printf '%s=%s\n' "$secret" "$(openssl rand -hex 32)" >> "$tmp"
+  done
   chown "${APP_USER}:${APP_USER}" "$tmp"
   chmod 0600 "$tmp"
   mv "$tmp" "$ENV_FILE"
-  echo "    ${ENV_FILE} exists — REDIS_URL reconciled"
+  echo "    ${ENV_FILE} exists — REDIS_URL and secrets reconciled"
 else
   (
     umask 077
     cat > "$ENV_FILE" <<EOF
 JWT_SECRET=$(openssl rand -hex 32)
+POW_SECRET=$(openssl rand -hex 32)
+TOTP_SECRET=$(openssl rand -hex 32)
 DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@127.0.0.1:5432/${DB_NAME}
 REDIS_URL=redis://:${REDIS_PASSWORD}@127.0.0.1:6379
 EOF

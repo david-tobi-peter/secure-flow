@@ -7,7 +7,7 @@ const nodeEnv = process.env.NODE_ENV ?? "development";
 const isProduction = nodeEnv === "production";
 
 if (isProduction) {
-  for (const key of ["DATABASE_URL", "REDIS_URL", "JWT_SECRET"]) {
+  for (const key of ["DATABASE_URL", "REDIS_URL", "JWT_SECRET", "POW_SECRET", "TOTP_SECRET"]) {
     if (!process.env[key]) {
       console.error(`Missing required environment variable in production: ${key}`);
       process.exit(1);
@@ -24,4 +24,7 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL ?? "",
   redisUrl: process.env.REDIS_URL ?? "redis://localhost:6379",
   jwtSecret: process.env.JWT_SECRET ?? "",
+  powSecret: process.env.POW_SECRET ?? "",
+  totpSecret: process.env.TOTP_SECRET ?? "",
+  totpIssuer: process.env.TOTP_ISSUER ?? "SecureFlow",
 } as const;

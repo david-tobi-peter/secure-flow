@@ -1,4 +1,27 @@
 paths:
+  /auth/pow:
+    post:
+      summary: Request a proof-of-work challenge
+      operationId: issuePowChallenge
+      tags:
+        - auth
+      responses:
+        "200":
+          description: Challenge issued
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/APIResponse"
+                  - type: object
+                    required:
+                      - data
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PowChallenge"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
   /auth/register:
     post:
       summary: Register a new user
@@ -13,7 +36,7 @@ paths:
               $ref: "#/components/schemas/RegisterRequest"
       responses:
         "201":
-          description: User registered
+          description: User registered; the token authorises two-factor setup
           content:
             application/json:
               schema:
@@ -24,15 +47,49 @@ paths:
                       - data
                     properties:
                       data:
-                        $ref: "#/components/schemas/AuthResult"
+                        $ref: "#/components/schemas/RegisterResult"
         "400":
           $ref: "#/components/responses/BadRequest"
         "409":
           $ref: "#/components/responses/Conflict"
 
+  /auth/setup-2fa:
+    post:
+      summary: Set up two-factor authentication
+      description: Proves the account with the token from registration, or with the email and password once that token has expired.
+      operationId: setupTwoFactor
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetupTwoFactorRequest"
+      responses:
+        "200":
+          description: Authenticator secret issued
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/APIResponse"
+                  - type: object
+                    required:
+                      - data
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/SetupTwoFactorResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "428":
+          $ref: "#/components/responses/POWRequired"
+
   /auth/login:
     post:
-      summary: Log in
+      summary: Check a password and open the two-factor step
       operationId: loginUser
       tags:
         - auth
@@ -42,6 +99,39 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Credentials accepted; two-factor code still required
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/APIResponse"
+                  - type: object
+                    required:
+                      - data
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PendingLogin"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "428":
+          $ref: "#/components/responses/POWRequired"
+
+  /auth/verify-totp:
+    post:
+      summary: Exchange a two-factor code for a session
+      operationId: verifyTotp
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyTotpRequest"
       responses:
         "200":
           description: Logged in
@@ -60,6 +150,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /auth/logout:
     post:
@@ -97,6 +189,52 @@ schemas:
         type: string
         minLength: 1
 
+  RegisterResult:
+    type: object
+    required:
+      - verificationToken
+    properties:
+      verificationToken:
+        type: string
+
+  SetupTwoFactorRequest:
+    oneOf:
+      - $ref: "#/components/schemas/SetupTwoFactorTokenRequest"
+      - $ref: "#/components/schemas/SetupTwoFactorCredentialsRequest"
+
+  SetupTwoFactorTokenRequest:
+    type: object
+    required:
+      - verificationToken
+    additionalProperties: false
+    properties:
+      verificationToken:
+        type: string
+
+  SetupTwoFactorCredentialsRequest:
+    type: object
+    required:
+      - email
+      - password
+    additionalProperties: false
+    properties:
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+
+  SetupTwoFactorResult:
+    type: object
+    required:
+      - secret
+      - otpauthUrl
+    properties:
+      secret:
+        type: string
+      otpauthUrl:
+        type: string
+
   LoginRequest:
     type: object
     required:
@@ -109,6 +247,44 @@ schemas:
         format: email
       password:
         type: string
+
+  PendingLogin:
+    type: object
+    required:
+      - pendingToken
+    properties:
+      pendingToken:
+        type: string
+
+  VerifyTotpRequest:
+    type: object
+    required:
+      - pendingToken
+      - code
+    additionalProperties: false
+    properties:
+      pendingToken:
+        type: string
+      code:
+        type: string
+
+  PowChallenge:
+    type: object
+    required:
+      - challenge
+      - difficulty
+      - algorithm
+      - expiresAt
+    properties:
+      challenge:
+        type: string
+      difficulty:
+        type: integer
+        minimum: 1
+      algorithm:
+        type: string
+      expiresAt:
+        type: integer
 
   User:
     type: object

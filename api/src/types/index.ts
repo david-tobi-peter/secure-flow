@@ -13,6 +13,16 @@ export type RegisterRequest = components["schemas"]["RegisterRequest"];
 export type LoginRequest = components["schemas"]["LoginRequest"];
 /** Response payload for auth endpoints. */
 export type AuthResult = components["schemas"]["AuthResult"];
+/** Result of POST /auth/register. */
+export type RegisterResult = components["schemas"]["RegisterResult"];
+/** Request body for POST /auth/setup-2fa. */
+export type SetupTwoFactorRequest = components["schemas"]["SetupTwoFactorRequest"];
+/** Response payload for POST /auth/setup-2fa. */
+export type SetupTwoFactorResult = components["schemas"]["SetupTwoFactorResult"];
+/** Result of POST /auth/login: proof the password was accepted. */
+export type PendingLogin = components["schemas"]["PendingLogin"];
+/** Request body for POST /auth/verify-totp. */
+export type VerifyTotpRequest = components["schemas"]["VerifyTotpRequest"];
 /** Public user representation. */
 export type User = components["schemas"]["User"];
 /** Organization view with the caller's role. */
