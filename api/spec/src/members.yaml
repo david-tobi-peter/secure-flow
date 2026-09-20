@@ -64,6 +64,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
   /organizations/{orgId}/members/{userId}:
     patch:
       summary: Change a member's role
@@ -106,6 +108,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
     delete:
       summary: Remove a member
       operationId: revokeMember

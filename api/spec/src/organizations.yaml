@@ -24,6 +24,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
     get:
       summary: List the caller's organizations
       operationId: listOrganizations

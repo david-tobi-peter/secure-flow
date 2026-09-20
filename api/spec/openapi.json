@@ -37,6 +37,22 @@
           "maximum": 100,
           "default": 20
         }
+      },
+      "PowChallengeHeader": {
+        "name": "x-pow-challenge",
+        "in": "header",
+        "description": "Challenge from `POST /auth/pow`, required once the source address is flagged.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "PowSolutionHeader": {
+        "name": "x-pow-solution",
+        "in": "header",
+        "description": "Nonce that solves the challenge, sent alongside it.",
+        "schema": {
+          "type": "string"
+        }
       }
     },
     "responses": {
@@ -90,8 +106,18 @@
           }
         }
       },
+      "PayloadTooLarge": {
+        "description": "Request body exceeds the accepted size",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
       "POWRequired": {
-        "description": "Proof of work required",
+        "description": "Proof of work required; fetch a challenge from `POST /auth/pow`, solve it, and retry with the `x-pow-challenge` and `x-pow-solution` headers.",
         "content": {
           "application/json": {
             "schema": {
@@ -911,6 +937,9 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           }
         }
       }
@@ -922,6 +951,14 @@
         "operationId": "setupTwoFactor",
         "tags": [
           "auth"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PowChallengeHeader"
+          },
+          {
+            "$ref": "#/components/parameters/PowSolutionHeader"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -965,6 +1002,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
           "428": {
             "$ref": "#/components/responses/POWRequired"
           }
@@ -977,6 +1017,14 @@
         "operationId": "loginUser",
         "tags": [
           "auth"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PowChallengeHeader"
+          },
+          {
+            "$ref": "#/components/parameters/PowSolutionHeader"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1019,6 +1067,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           },
           "428": {
             "$ref": "#/components/responses/POWRequired"
@@ -1074,6 +1125,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
@@ -1246,6 +1300,9 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           }
         }
       }
@@ -1314,6 +1371,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           }
         }
       },
@@ -1412,6 +1472,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           }
         }
       },
@@ -1546,6 +1609,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           }
         }
       },
@@ -1816,6 +1882,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           }
         }
       }
@@ -1949,6 +2018,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
           }
         }
       },

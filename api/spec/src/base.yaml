@@ -28,6 +28,18 @@ components:
         minimum: 1
         maximum: 100
         default: 20
+    PowChallengeHeader:
+      name: x-pow-challenge
+      in: header
+      description: Challenge from `POST /auth/pow`, required once the source address is flagged.
+      schema:
+        type: string
+    PowSolutionHeader:
+      name: x-pow-solution
+      in: header
+      description: Nonce that solves the challenge, sent alongside it.
+      schema:
+        type: string
 
   responses:
     BadRequest:
@@ -60,8 +72,14 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    PayloadTooLarge:
+      description: Request body exceeds the accepted size
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     POWRequired:
-      description: Proof of work required
+      description: Proof of work required; fetch a challenge from `POST /auth/pow`, solve it, and retry with the `x-pow-challenge` and `x-pow-solution` headers.
       content:
         application/json:
           schema:

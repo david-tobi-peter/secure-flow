@@ -16,6 +16,13 @@ async function bootstrap(): Promise<void> {
     );
   });
 
+  /** Server timeout options to avoid hanging connections. */
+  server.headersTimeout = 15_000;
+  server.requestTimeout = 15_000;
+  server.keepAliveTimeout = 5_000;
+  server.maxConnections = 1024;
+  server.maxHeadersCount = 100;
+
   function shutdown(signal: NodeJS.Signals): void {
     Logger.info(`Received ${signal}, shutting down gracefully`);
     server.close(async (err) => {
