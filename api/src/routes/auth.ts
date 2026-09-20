@@ -9,5 +9,7 @@ export const authRouter = Router();
 
 authRouter.post("/pow", authController.pow);
 authRouter.post("/register", authController.register);
+authRouter.post("/setup-2fa", authGate, authController.setupTwoFactor);
 authRouter.post("/login", authGate, authController.login);
+authRouter.post("/verify-totp", authController.verifyTotp);
 authRouter.post("/logout", requireAuth, authController.logout);

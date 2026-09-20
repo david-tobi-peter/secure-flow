@@ -3,8 +3,14 @@ import { Container, Service } from "typedi";
 import { ApiResponse } from "@/helpers/index.js";
 import { Controller } from "@/decorators/index.js";
 import { HttpError } from "@/errors/index.js";
-import { AuthService, PowService, RateLimitService, SessionService } from "@/services/index.js";
-import type { LoginRequest, RegisterRequest } from "@/types/index.js";
+import { PowService, RateLimitService } from "@/security/index.js";
+import { AuthService, SessionService } from "@/services/index.js";
+import type {
+  LoginRequest,
+  RegisterRequest,
+  SetupTwoFactorRequest,
+  VerifyTotpRequest,
+} from "@/types/index.js";
 
 /** HTTP layer for the auth endpoints. */
 @Service()
@@ -59,7 +65,30 @@ export class AuthController {
   }
 
   /**
-   * Log in.
+   * Setup two-factor authentication for a user.
+   *
+   * @param req
+   * @param res
+   */
+  async setupTwoFactor(req: Request, res: Response): Promise<void> {
+    const payload = req.body as SetupTwoFactorRequest;
+    const ip = req.ip ?? "unknown";
+    const checkedPassword = !("verificationToken" in payload);
+
+    try {
+      const result = await this.authService.setupTwoFactor(payload);
+
+      ApiResponse.send(res, 200, "Two-factor secret issued", result);
+    } catch (err) {
+      if (checkedPassword && err instanceof HttpError && err.statusCode === 401) {
+        await this.rateLimit.recordPasswordFailure(ip);
+      }
+      HttpError.handle(req, err);
+    }
+  }
+
+  /**
+   * Authenticate a user and issue a pending token.
    *
    * @param req
    * @param res
@@ -69,13 +98,30 @@ export class AuthController {
     const ip = req.ip ?? "unknown";
 
     try {
-      const result = await this.authService.login(payload);
+      const result = await this.authService.startLogin(payload);
 
-      ApiResponse.send(res, 200, "Logged in", result);
+      ApiResponse.send(res, 200, "Credentials accepted", result);
     } catch (err) {
       if (err instanceof HttpError && err.statusCode === 401) {
         await this.rateLimit.recordPasswordFailure(ip);
       }
+      HttpError.handle(req, err);
+    }
+  }
+
+  /**
+   * Verify a TOTP code and log in the user.
+   *
+   * @param req
+   * @param res
+   */
+  async verifyTotp(req: Request, res: Response): Promise<void> {
+    try {
+      const payload = req.body as VerifyTotpRequest;
+      const result = await this.authService.finishLogin(payload.pendingToken, payload.code);
+
+      ApiResponse.send(res, 200, "Logged in", result);
+    } catch (err) {
       HttpError.handle(req, err);
     }
   }

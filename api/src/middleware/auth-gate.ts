@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { Container } from "typedi";
 import { HttpError } from "@/errors/index.js";
-import { PowService, RateLimitService } from "@/services/index.js";
+import { PowService, RateLimitService } from "@/security/index.js";
 
 const CHALLENGE_HEADER = "x-pow-challenge";
 const SOLUTION_HEADER = "x-pow-solution";

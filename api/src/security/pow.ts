@@ -28,7 +28,7 @@ export class PowService {
   issue(ip: string): PowChallenge {
     const issuedAt = Math.floor(Date.now() / 1000).toString();
     const nonce = randomBytes(8).toString("hex");
-    const challenge = encode(`${issuedAt}.${nonce}.${this.signature(ip, issuedAt, nonce)}`);
+    const challenge = PowService.encode(`${issuedAt}.${nonce}.${this.signature(ip, issuedAt, nonce)}`);
 
     return {
       challenge,
@@ -46,7 +46,7 @@ export class PowService {
    * @param ip
    */
   async verify(challenge: string, solution: string, ip: string): Promise<boolean> {
-    const [issuedAt, nonce, signature] = decode(challenge).split(".");
+    const [issuedAt, nonce, signature] = PowService.decode(challenge).split(".");
     if (!issuedAt || !nonce || !signature) {
       return false;
     }
@@ -65,7 +65,7 @@ export class PowService {
     }
 
     const spent = await redis.set(
-      `${SPENT_KEY_PREFIX}${digest(challenge)}`,
+      `${SPENT_KEY_PREFIX}${PowService.digest(challenge)}`,
       "1",
       "EX",
       CHALLENGE_TTL_SECONDS,
@@ -75,25 +75,25 @@ export class PowService {
       return false;
     }
 
-    return digest(`${challenge}${solution}`).startsWith("0".repeat(PowService.DIFFICULTY));
+    return PowService.digest(`${challenge}${solution}`).startsWith("0".repeat(PowService.DIFFICULTY));
   }
 
   private signature(ip: string, issuedAt: string, nonce: string): string {
-    return createHmac("sha256", config.jwtSecret)
+    return createHmac("sha256", config.powSecret)
       .update(`${ip}|${issuedAt}|${nonce}`)
       .digest("hex")
       .slice(0, 32);
   }
-}
 
-function digest(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
+  private static digest(value: string): string {
+    return createHash("sha256").update(value).digest("hex");
+  }
 
-function encode(value: string): string {
-  return Buffer.from(value, "utf8").toString("base64url");
-}
+  private static encode(value: string): string {
+    return Buffer.from(value, "utf8").toString("base64url");
+  }
 
-function decode(value: string): string {
-  return Buffer.from(value, "base64url").toString("utf8");
+  private static decode(value: string): string {
+    return Buffer.from(value, "base64url").toString("utf8");
+  }
 }
