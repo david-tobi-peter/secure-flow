@@ -17,6 +17,9 @@ JOURNAL_MAX_FILE="${JOURNAL_MAX_FILE:-50M}"
 JOURNAL_RETENTION="${JOURNAL_RETENTION:-14day}"
 UNIT_NAME="secureflow-api"
 UNIT_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/${UNIT_NAME}.service"
+SSHD_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/sshd-hardening.conf"
+SSHD_DROPIN="/etc/ssh/sshd_config.d/10-secureflow.conf"
+SSH_USER="${SSH_USER:-david}"
 ENV_FILE="${APP_DIR}/.env"
 
 DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD must be set}"
@@ -148,6 +151,35 @@ echo "==> systemd unit"
 install -m 0644 "$UNIT_SRC" "/etc/systemd/system/${UNIT_NAME}.service"
 systemctl daemon-reload
 systemctl enable "$UNIT_NAME"
+
+echo "==> Firewall"
+apt-get install -y -q ufw
+# allow 22 first: default-deny inbound would otherwise cut the connection provisioning runs over
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp
+ufw --force enable
+ufw status verbose
+
+echo "==> SSH ingress"
+if [[ ! -s "/home/${SSH_USER}/.authorized_keys" ]]; then
+  echo "    ! ${SSH_USER} has no authorized_keys — skipping, key-only would remove the way in"
+elif [[ ! -f "$SSHD_SRC" ]]; then
+  echo "    ! template not found: $SSHD_SRC"
+else
+  install -d -m 0755 /etc/ssh/sshd_config.d
+  ( umask 022; sed "s|\${SSH_USER}|${SSH_USER}|g" "$SSHD_SRC" > "$SSHD_DROPIN" )
+  chmod 0644 "$SSHD_DROPIN"
+  if sshd -t 2>/dev/null; then
+    systemctl reload ssh 2>/dev/null || \
+      echo "    ssh.service is not running; the drop-in applies on the next connection"
+    printf '    installed %s\n' "$SSHD_DROPIN"
+    sshd -T | grep -E '^(passwordauthentication|permitrootlogin|allowusers|allowtcpforwarding)' | sed 's/^/    /'
+  else
+    rm -f "$SSHD_DROPIN"
+    printf '    ! sshd config test failed, drop-in removed, ssh not reloaded\n' >&2
+  fi
+fi
 
 echo "==> Summary"
 printf '    user      %s\n' "$APP_USER"
