@@ -28,7 +28,7 @@ Detection engineering → Incident response → Adversarial testing → Hardened
 | 1 | The Boring API | What is the workload? | Multi-tenant project-management API: auth, organizations, members, projects, tasks | [01-the-boring-api.md](docs/phases/01-the-boring-api.md) |
 | 2 | Running It | Where does the application run? | Linux · dedicated service user · systemd · journald | [02-running-it.md](docs/phases/02-running-it.md) |
 | 3 | Hardening the Host and API | How do we secure the machine? | SSH · firewall · resource limits · sysctl · file ownership | [03-hardening-the-host-and-api.md](docs/phases/03-hardening-the-host-and-api.md) |
-| 4 | Understanding the Network | How does it communicate? | Networking fundamentals · packets · routing | — |
+| 4 | Understanding the Network | How does it communicate? | Networking fundamentals · packets · routing | [04-understanding-the-network.md](docs/phases/04-understanding-the-network.md) |
 | 5 | Exposing It Safely | How do we expose it to the world? | DNS · TLS · reverse proxy · firewalls | — |
 | 6 | Protecting Data & Identities | What protects our data and identities? | Cryptography · hashing · HMAC · PKI · key management | — |
 | 7 | Into the Cloud | How do we scale the infrastructure? | AWS | — |
